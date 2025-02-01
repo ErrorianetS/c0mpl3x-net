@@ -14,8 +14,8 @@ const runAutomation = async () => {
                 env: 'development',
                 region: this.main.region,
                 sessionId: this.main.sessionId,
-                rowCount: 1024, // Указываем количество строк
-                colCount: 128  // Указываем количество столбцов
+                rowCount: 1024,
+                colCount: 128
             };
 
             if (this.main.isLoggedIn()) {
@@ -34,9 +34,7 @@ const runAutomation = async () => {
                 data["name"] = colonyName;
             }
 
-            // Логирование данных перед отправкой
             console.log("Отправляемые данные:", data);
-
             this.main.sendToMatchmaker({ event: "NewColony", data: data });
         }
 
