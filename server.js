@@ -1,25 +1,53 @@
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
+const puppeteer = require('puppeteer');
 
-app.use(express.static('public'));
-app.use(express.json());
+const runAutomation = async () => {
+    const browser = await puppeteer.launch({ headless: false }); // Запускаем браузер
+    const page = await browser.newPage(); // Открываем новую вкладку
 
-let signals = []; // Массив для хранения сигналов
+    // Переходим на сайт
+    await page.goto('https://junon.io', { waitUntil: 'networkidle2' });
 
-// Обработка POST-запроса для отправки сигнала
-app.post('/signal', (req, res) => {
-    const signal = req.body;
-    signals.push(signal); // Сохраняем сигнал
-    console.log('Получен сигнал:', signal);
-    res.send('Сигнал получен!');
-});
+    // Выполняем код на странице
+    await page.evaluate(() => {
+        const requestNewColonyFromMatchmaker = async (isTutorial = false) => {
+            let data = {
+                env: 'development',
+                region: this.main.region,
+                sessionId: this.main.sessionId,
+                rowCount: 1024, // Указываем количество строк
+                colCount: 128  // Указываем количество столбцов
+            };
 
-// Обработка GET-запроса для получения сигналов
-app.get('/signals', (req, res) => {
-    res.json(signals); // Возвращаем все сигналы
-});
+            if (this.main.isLoggedIn()) {
+                let idToken = await this.main.getFirebaseIdToken();
+                data["idToken"] = idToken;
+                data["username"] = this.main.username;
+                data["uid"] = this.main.uid;
+            }
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+            if (isTutorial) {
+                data["isTutorial"] = true;
+            }
+
+            let colonyName = 'TestTest1234';
+            if (colonyName.length > 0) {
+                data["name"] = colonyName;
+            }
+
+            // Логирование данных перед отправкой
+            console.log("Отправляемые данные:", data);
+
+            this.main.sendToMatchmaker({ event: "NewColony", data: data });
+        }
+
+        // Присваиваем функцию в объект
+        main.requestNewColonyFromMatchmaker = requestNewColonyFromMatchmaker;
+        main.requestNewColonyFromMatchmaker();
+    });
+
+    // Закрываем браузер (по желанию)
+    // await browser.close();
+};
+
+// Запускаем автоматизацию
+runAutomation().catch(console.error);
